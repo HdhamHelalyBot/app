@@ -1,37 +1,17 @@
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-import { GoogleGenAI } from "@google/genai";
+// استخدم الـ API KEY من ملف .env.local
+const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
 
-// Ensure the API key is available, but do not handle user input for it.
-if (!process.env.API_KEY) {
-    throw new Error("API_KEY environment variable not set. Please configure it in your environment.");
-}
+export async function runQuery(prompt: string) {
+  try {
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const result = await model.generateContent(prompt);
 
-/**
- * Sends a prompt to the Gemini model and returns the text response.
- * @param prompt The user's question or prompt.
- * @returns A promise that resolves to the model's text response.
- */
-export async function runQuery(prompt: string): Promise<string> {
-    try {
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: prompt,
-        });
-
-        const text = response.text;
-
-        if (!text) {
-          throw new Error("لم يتم استلام أي نص من Gemini. قد تكون الاستجابة فارغة أو محظورة.");
-        }
-        
-        return text;
-    } catch (error) {
-        console.error("Gemini API Error:", error);
-        if (error instanceof Error) {
-            throw new Error(`خطأ في واجهة برمجة تطبيقات Gemini: ${error.message}`);
-        }
-        throw new Error("حدث خطأ غير معروف أثناء الاتصال بـ Gemini API.");
-    }
+    return result.response.text();
+  } catch (error: any) {
+    console.error("Gemini API Error:", error);
+    return "حدث خطأ أثناء الاتصال بـ Google Gemini. تأكد من أن API KEY صحيح.";
+  }
 }
